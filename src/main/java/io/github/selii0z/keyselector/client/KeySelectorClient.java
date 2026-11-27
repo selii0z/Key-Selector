@@ -16,7 +16,8 @@ public final class KeySelectorClient {
     private KeySelectorClient() {}
 
     public static boolean keyEvent(int key, int scanCode, int action) {
-        if (key == GLFW.GLFW_KEY_UNKNOWN || action == GLFW.GLFW_REPEAT) return false;
+        if (key == GLFW.GLFW_KEY_UNKNOWN) return false;
+        if (action == GLFW.GLFW_REPEAT) return InputConstants.getKey(key, scanCode).equals(held);
         return handleInput(InputConstants.getKey(key, scanCode), action);
     }
 
@@ -27,7 +28,7 @@ public final class KeySelectorClient {
     private static boolean handleInput(InputConstants.Key input, int action) {
         Minecraft mc = Minecraft.getInstance();
         if (action == GLFW.GLFW_RELEASE && input.equals(held)) {
-            if (!radialOpened) mc.setScreen(new RadialScreen(choices, input, false));
+            if (!radialOpened && mc.screen == null && mc.player != null) mc.setScreen(new RadialScreen(choices, input, false));
             else if (mc.screen instanceof RadialScreen screen) screen.finishHold();
             held = null;
             choices = List.of();
@@ -59,6 +60,7 @@ public final class KeySelectorClient {
     public static void activate(KeyMapping mapping) {
         // Only click-based KeyMappings can be emulated. Direct GLFW and key-down handlers
         // require special compatibility support.
-        KeyMapping.click(mapping.getKey());
+        var access = (io.github.selii0z.keyselector.mixin.KeyMappingAccessor) (Object) mapping;
+        access.keyselector$setClickCount(access.keyselector$getClickCount() + 1);
     }
 }
