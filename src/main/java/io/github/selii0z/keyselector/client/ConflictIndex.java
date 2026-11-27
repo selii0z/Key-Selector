@@ -20,6 +20,14 @@ public final class ConflictIndex {
     public static List<KeyMapping> find(InputConstants.Key input) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.options == null || input.equals(InputConstants.UNKNOWN)) return List.of();
+        // Never intercept essential vanilla gameplay controls, including remapped AZERTY keys.
+        for (KeyMapping m : mc.options.keyMappings) {
+            if (m.getKey().equals(input) && java.util.Set.of(
+                "key.forward", "key.back", "key.left", "key.right", "key.jump",
+                "key.sneak", "key.sprint", "key.attack", "key.use", "key.pickItem",
+                "key.drop", "key.inventory", "key.swapOffhand"
+            ).contains(m.getName())) return List.of();
+        }
         List<KeyMapping> out = new ArrayList<>();
         for (KeyMapping m : mc.options.keyMappings) if (m.getKey().equals(input)) out.add(m);
         out.sort(Comparator.comparing(KeyMapping::getName));
