@@ -9,6 +9,14 @@ import java.util.List;
 
 public final class ConflictIndex {
     private ConflictIndex() {}
+    public static List<KeyMapping> visible(InputConstants.Key input, List<KeyMapping> mappings) {
+        var rule = Preferences.INSTANCE.rule(input.getName());
+        return mappings.stream().filter(m -> !rule.hidden.contains(m.getName()))
+            .sorted(Comparator.comparingInt(m -> {
+                int i = rule.order.indexOf(m.getName());
+                return i < 0 ? Integer.MAX_VALUE : i;
+            })).toList();
+    }
     public static List<KeyMapping> find(InputConstants.Key input) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.options == null || input.equals(InputConstants.UNKNOWN)) return List.of();
