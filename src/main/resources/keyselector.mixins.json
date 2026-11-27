@@ -1,0 +1,1 @@
+{"required":true,"minVersion":"0.8","package":"io.github.selii0z.keyselector.mixin","compatibilityLevel":"JAVA_21","client":["KeyboardHandlerMixin","MouseHandlerMixin"],"injectors":{"defaultRequire":1}}
