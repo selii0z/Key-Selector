@@ -28,7 +28,13 @@ public final class KeySelectorClient {
     private static boolean handleInput(InputConstants.Key input, int action) {
         Minecraft mc = Minecraft.getInstance();
         if (action == GLFW.GLFW_RELEASE && input.equals(held)) {
-            if (!radialOpened && mc.screen == null && mc.player != null) mc.setScreen(new RadialScreen(choices, input, false));
+            if (!radialOpened && mc.screen == null && mc.player != null) {
+                String priority = Preferences.INSTANCE.rule(input.getName()).priority;
+                var preferred = choices.stream().filter(m -> m.getName().equals(priority)).findFirst();
+                if (preferred.isPresent()) activate(preferred.get());
+                else if (choices.size() == 1) activate(choices.getFirst());
+                else if (!choices.isEmpty()) mc.setScreen(new RadialScreen(choices, input, false));
+            }
             else if (mc.screen instanceof RadialScreen screen) screen.finishHold();
             held = null;
             choices = List.of();
@@ -42,7 +48,7 @@ public final class KeySelectorClient {
             held = input;
             pressedAt = System.nanoTime();
             radialOpened = false;
-            choices = matches;
+            choices = ConflictIndex.visible(input, matches);
             return true;
         }
         return false;
@@ -51,7 +57,7 @@ public final class KeySelectorClient {
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
         if (held != null && !radialOpened && Minecraft.getInstance().screen == null &&
-            System.nanoTime() - pressedAt >= 300_000_000L) {
+            System.nanoTime() - pressedAt >= Math.max(100, Math.min(2000, Preferences.INSTANCE.holdMillis)) * 1_000_000L) {
             radialOpened = true;
             Minecraft.getInstance().setScreen(new RadialScreen(choices, held, true));
         }
